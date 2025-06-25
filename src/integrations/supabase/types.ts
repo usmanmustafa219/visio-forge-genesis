@@ -9,13 +9,140 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          stripe_payment_intent_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          stripe_payment_intent_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          stripe_payment_intent_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      images: {
+        Row: {
+          category: string | null
+          created_at: string
+          credits_used: number | null
+          extra_instructions: string | null
+          id: string
+          image_data: string | null
+          image_url: string | null
+          mood: string | null
+          prompt: string
+          quality: string | null
+          size: string | null
+          status: string | null
+          style: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          credits_used?: number | null
+          extra_instructions?: string | null
+          id?: string
+          image_data?: string | null
+          image_url?: string | null
+          mood?: string | null
+          prompt: string
+          quality?: string | null
+          size?: string | null
+          status?: string | null
+          style?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          credits_used?: number | null
+          extra_instructions?: string | null
+          id?: string
+          image_data?: string | null
+          image_url?: string | null
+          mood?: string | null
+          prompt?: string
+          quality?: string | null
+          size?: string | null
+          status?: string | null
+          style?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          credits: number
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          total_credits_consumed: number
+          total_credits_purchased: number
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          credits?: number
+          email: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          total_credits_consumed?: number
+          total_credits_purchased?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          credits?: number
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          total_credits_consumed?: number
+          total_credits_purchased?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_user_credits: {
+        Args: {
+          user_uuid: string
+          credit_change: number
+          transaction_type: string
+          transaction_description?: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

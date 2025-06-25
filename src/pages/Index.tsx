@@ -1,34 +1,20 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Sparkles, Zap, Eye, ArrowRight } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [prompt, setPrompt] = useState("");
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
-      {/* Navigation */}
-      <nav className="flex justify-between items-center p-6 relative z-10">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-            <Eye className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Visiomancer
-          </span>
-        </div>
-        <div className="flex space-x-4">
-          <Button variant="ghost" className="text-white hover:text-purple-300">
-            Login
-          </Button>
-          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-            Sign Up
-          </Button>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <div className="relative">
@@ -85,9 +71,14 @@ const Index = () => {
                       placeholder="A mystical forest with glowing mushrooms and floating crystals..."
                       className="flex-1 bg-transparent border-none text-white placeholder-gray-400 text-lg focus:ring-0"
                     />
-                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8">
-                      <Sparkles className="w-5 h-5 mr-2" />
-                      Generate
+                    <Button 
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8"
+                      asChild
+                    >
+                      <Link to={user ? "/generate" : "/auth"}>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        Generate
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -104,17 +95,21 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8 py-6 group"
+                asChild
               >
-                <Zap className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-                Generate Your First Image
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <Link to={user ? "/generate" : "/auth"}>
+                  <Zap className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+                  Generate Your First Image
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
                 className="border-purple-500 text-purple-300 hover:bg-purple-500/10 text-lg px-8 py-6"
+                asChild
               >
-                View Pricing Plans
+                <Link to="/credits">View Pricing Plans</Link>
               </Button>
             </motion.div>
 
