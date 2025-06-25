@@ -1,24 +1,48 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
-import { Sparkles, Wand2, Settings } from 'lucide-react';
+import { Sparkles, Wand2, Settings, Loader2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { useImageGeneration } from '@/hooks/useImageGeneration';
+import { useSearchParams } from 'react-router-dom';
 
 const Generate = () => {
+  const [searchParams] = useSearchParams();
   const [prompt, setPrompt] = useState('');
   const [category, setCategory] = useState('');
   const [style, setStyle] = useState('');
-  const [quality, setQuality] = useState('medium');
+  const [quality, setQuality] = useState('standard');
   const [size, setSize] = useState('1024x1024');
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+
+  const { generateImage, isGenerating } = useImageGeneration();
+
+  // Handle URL parameters for pre-filled prompts
+  useEffect(() => {
+    const urlPrompt = searchParams.get('prompt');
+    if (urlPrompt) {
+      setPrompt(urlPrompt);
+    }
+  }, [searchParams]);
 
   const handleGenerate = () => {
-    // TODO: Implement image generation
-    console.log('Generating image with:', { prompt, category, style, quality, size });
+    if (!prompt.trim()) return;
+
+    generateImage({
+      prompt,
+      quality,
+      size,
+      category,
+      style,
+    }, {
+      onSuccess: (data) => {
+        setGeneratedImage(data.imageUrl);
+      }
+    });
   };
 
   return (
@@ -109,8 +133,7 @@ const Generate = () => {
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
                         <SelectItem value="standard">Standard (3 credits)</SelectItem>
-                        <SelectItem value="medium">Medium (5 credits)</SelectItem>
-                        <SelectItem value="high">High (8 credits)</SelectItem>
+                        <SelectItem value="hd">HD (8 credits)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -122,10 +145,9 @@ const Generate = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                        <SelectItem value="512x512">512×512 (Square)</SelectItem>
                         <SelectItem value="1024x1024">1024×1024 (Square)</SelectItem>
-                        <SelectItem value="1024x768">1024×768 (Landscape)</SelectItem>
-                        <SelectItem value="768x1024">768×1024 (Portrait)</SelectItem>
+                        <SelectItem value="1792x1024">1792×1024 (Landscape)</SelectItem>
+                        <SelectItem value="1024x1792">1024×1792 (Portrait)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -133,11 +155,20 @@ const Generate = () => {
 
                 <Button
                   onClick={handleGenerate}
-                  disabled={!prompt.trim()}
+                  disabled={!prompt.trim() || isGenerating}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
                 >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Generate Image
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Generate Image
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -155,11 +186,25 @@ const Generate = () => {
               </CardHeader>
               <CardContent>
                 <div className="aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border-2 border-dashed border-purple-500/30">
-                  <div className="text-center text-gray-400">
-                    <Sparkles className="w-12 h-12 mx-auto mb-4" />
-                    <p className="text-lg font-medium mb-2">Ready to Create</p>
-                    <p className="text-sm">Enter a prompt and click generate to see your image</p>
-                  </div>
+                  {isGenerating ? (
+                    <div className="text-center text-gray-400">
+                      <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" />
+                      <p className="text-lg font-medium mb-2">Creating Magic</p>
+                      <p className="text-sm">Please wait while we generate your image...</p>
+                    </div>
+                  ) : generatedImage ? (
+                    <img 
+                      src={generatedImage} 
+                      alt="Generated image" 
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  ) : (
+                    <div className="text-center text-gray-400">
+                      <Sparkles className="w-12 h-12 mx-auto mb-4" />
+                      <p className="text-lg font-medium mb-2">Ready to Create</p>
+                      <p className="text-sm">Enter a prompt and click generate to see your image</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

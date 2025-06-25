@@ -10,6 +10,9 @@ import Dashboard from '@/pages/Dashboard';
 import Generate from '@/pages/Generate';
 import Credits from '@/pages/Credits';
 import Gallery from '@/pages/Gallery';
+import Samples from '@/pages/Samples';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -23,6 +26,9 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/samples" element={<Samples />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               <Route
                 path="/dashboard"
                 element={

@@ -1,7 +1,7 @@
 
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, User, LogOut, Zap, Image, CreditCard } from 'lucide-react';
+import { Eye, User, LogOut, Zap, Image, CreditCard, Palette, Info, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import {
@@ -32,6 +32,18 @@ export const Navbar = () => {
           Visiomancer
         </span>
       </Link>
+
+      <div className="hidden md:flex items-center space-x-6">
+        <Link to="/samples" className="text-gray-300 hover:text-purple-300 transition-colors">
+          Samples
+        </Link>
+        <Link to="/about" className="text-gray-300 hover:text-purple-300 transition-colors">
+          About
+        </Link>
+        <Link to="/contact" className="text-gray-300 hover:text-purple-300 transition-colors">
+          Contact
+        </Link>
+      </div>
 
       <div className="flex items-center space-x-4">
         {user ? (
@@ -67,6 +79,25 @@ export const Navbar = () => {
                   <Link to="/credits" className="flex items-center space-x-2">
                     <CreditCard className="w-4 h-4" />
                     <span>Buy Credits</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/samples" className="flex items-center space-x-2">
+                    <Palette className="w-4 h-4" />
+                    <span>Sample Gallery</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/about" className="flex items-center space-x-2">
+                    <Info className="w-4 h-4" />
+                    <span>About</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/contact" className="flex items-center space-x-2">
+                    <Phone className="w-4 h-4" />
+                    <span>Contact</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
