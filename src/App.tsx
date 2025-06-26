@@ -11,6 +11,7 @@ import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
 import Generate from '@/pages/Generate';
 import Credits from '@/pages/Credits';
+import PaymentSuccess from '@/pages/PaymentSuccess';
 import Gallery from '@/pages/Gallery';
 import Samples from '@/pages/Samples';
 import About from '@/pages/About';
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/samples" element={<Samples />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route
                   path="/dashboard"
                   element={

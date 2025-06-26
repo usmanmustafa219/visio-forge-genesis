@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      credit_packages: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          credits: number
+          discount_percentage: number | null
+          id: string
+          name: string
+          price_cents: number
+          stripe_price_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          credits: number
+          discount_percentage?: number | null
+          id?: string
+          name: string
+          price_cents: number
+          stripe_price_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          credits?: number
+          discount_percentage?: number | null
+          id?: string
+          name?: string
+          price_cents?: number
+          stripe_price_id?: string | null
+        }
+        Relationships: []
+      }
       credit_transactions: {
         Row: {
           amount: number
@@ -89,6 +122,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payment_sessions: {
+        Row: {
+          amount_cents: number
+          completed_at: string | null
+          created_at: string
+          credits: number
+          id: string
+          is_test: boolean | null
+          package_id: string
+          status: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          completed_at?: string | null
+          created_at?: string
+          credits: number
+          id?: string
+          is_test?: boolean | null
+          package_id: string
+          status?: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          completed_at?: string | null
+          created_at?: string
+          credits?: number
+          id?: string
+          is_test?: boolean | null
+          package_id?: string
+          status?: string | null
+          stripe_session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_sessions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
