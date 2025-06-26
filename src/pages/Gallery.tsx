@@ -1,6 +1,5 @@
 
 import { motion } from 'framer-motion';
-import { Navbar } from '@/components/Navbar';
 import { useImages } from '@/hooks/useImages';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Download, Eye } from 'lucide-react';
@@ -19,8 +18,7 @@ const Gallery = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        <Navbar />
-        <div className="container mx-auto px-6 py-8 flex items-center justify-center">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
         </div>
       </div>
@@ -29,19 +27,17 @@ const Gallery = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Navbar />
-
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               My Gallery
             </h1>
-            <p className="text-gray-300 text-lg">
+            <p className="text-gray-300 text-base sm:text-lg">
               Your AI-generated masterpieces
             </p>
           </div>
@@ -59,7 +55,7 @@ const Gallery = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {images.map((image) => (
                 <motion.div
                   key={image.id}
@@ -85,8 +81,8 @@ const Gallery = () => {
                           </Button>
                         </div>
                       </div>
-                      <div className="p-4">
-                        <p className="text-sm text-gray-300 mb-2 line-clamp-2">
+                      <div className="p-3 sm:p-4">
+                        <p className="text-xs sm:text-sm text-gray-300 mb-2 line-clamp-2">
                           {image.prompt}
                         </p>
                         <div className="flex justify-between items-center text-xs text-gray-500">

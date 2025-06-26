@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
 import { Sparkles, Wand2, Settings, Loader2 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
 import { useImageGeneration } from '@/hooks/useImageGeneration';
 import { useSearchParams } from 'react-router-dom';
 
@@ -47,33 +46,31 @@ const Generate = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Navbar />
-
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-4xl mx-auto"
+          className="max-w-6xl mx-auto"
         >
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               Generate Image
             </h1>
-            <p className="text-gray-300 text-lg">
+            <p className="text-gray-300 text-base sm:text-lg">
               Describe your vision and watch AI bring it to life
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Generation Form */}
             <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
                   <Wand2 className="w-5 h-5 text-purple-400" />
                   <span>Create Your Image</span>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm sm:text-base">
                   Describe what you want to see and customize the generation settings
                 </CardDescription>
               </CardHeader>
@@ -84,15 +81,15 @@ const Generate = () => {
                     placeholder="A mystical forest with glowing mushrooms and floating crystals under a starry sky..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    className="bg-slate-700/50 border-purple-500/30 text-white placeholder-gray-400 min-h-[100px]"
+                    className="bg-slate-700/50 border-purple-500/30 text-white placeholder-gray-400 min-h-[100px] text-sm sm:text-base"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Category</label>
                     <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
@@ -109,7 +106,7 @@ const Generate = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2">Style</label>
                     <Select value={style} onValueChange={setStyle}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
                         <SelectValue placeholder="Select style" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
@@ -124,11 +121,11 @@ const Generate = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Quality</label>
                     <Select value={quality} onValueChange={setQuality}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
@@ -141,7 +138,7 @@ const Generate = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2">Size</label>
                     <Select value={size} onValueChange={setSize}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
@@ -156,7 +153,7 @@ const Generate = () => {
                 <Button
                   onClick={handleGenerate}
                   disabled={!prompt.trim() || isGenerating}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-base sm:text-lg py-3 sm:py-6"
                 >
                   {isGenerating ? (
                     <>
@@ -176,18 +173,18 @@ const Generate = () => {
             {/* Preview Area */}
             <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
                   <Settings className="w-5 h-5 text-cyan-400" />
                   <span>Preview</span>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm sm:text-base">
                   Your generated image will appear here
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border-2 border-dashed border-purple-500/30">
                   {isGenerating ? (
-                    <div className="text-center text-gray-400">
+                    <div className="text-center text-gray-400 p-4">
                       <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" />
                       <p className="text-lg font-medium mb-2">Creating Magic</p>
                       <p className="text-sm">Please wait while we generate your image...</p>
@@ -199,7 +196,7 @@ const Generate = () => {
                       className="w-full h-full object-contain rounded-lg"
                     />
                   ) : (
-                    <div className="text-center text-gray-400">
+                    <div className="text-center text-gray-400 p-4">
                       <Sparkles className="w-12 h-12 mx-auto mb-4" />
                       <p className="text-lg font-medium mb-2">Ready to Create</p>
                       <p className="text-sm">Enter a prompt and click generate to see your image</p>

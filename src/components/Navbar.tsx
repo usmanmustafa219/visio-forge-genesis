@@ -23,42 +23,42 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="flex justify-between items-center p-6 relative z-10">
+    <nav className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 relative z-10 space-y-4 sm:space-y-0">
       <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
         <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
           <Eye className="w-5 h-5 text-white" />
         </div>
-        <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
           Visiomancer
         </span>
       </Link>
 
-      <div className="hidden md:flex items-center space-x-6">
-        <Link to="/samples" className="text-gray-300 hover:text-purple-300 transition-colors">
+      <div className="hidden lg:flex items-center space-x-6">
+        <Link to="/samples" className="text-gray-300 hover:text-purple-300 transition-colors text-sm sm:text-base">
           Samples
         </Link>
-        <Link to="/about" className="text-gray-300 hover:text-purple-300 transition-colors">
+        <Link to="/about" className="text-gray-300 hover:text-purple-300 transition-colors text-sm sm:text-base">
           About
         </Link>
-        <Link to="/contact" className="text-gray-300 hover:text-purple-300 transition-colors">
+        <Link to="/contact" className="text-gray-300 hover:text-purple-300 transition-colors text-sm sm:text-base">
           Contact
         </Link>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
         {user ? (
           <>
             {/* Credits Display */}
             <div className="flex items-center space-x-2 bg-slate-800/50 rounded-lg px-3 py-2 border border-purple-500/30">
               <Zap className="w-4 h-4 text-yellow-400" />
-              <span className="text-white font-medium">{profile?.credits || 0}</span>
-              <span className="text-gray-400 text-sm">credits</span>
+              <span className="text-white font-medium text-sm sm:text-base">{profile?.credits || 0}</span>
+              <span className="text-gray-400 text-xs sm:text-sm">credits</span>
             </div>
 
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-white hover:text-purple-300">
+                <Button variant="ghost" className="text-white hover:text-purple-300 p-2">
                   <User className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -109,8 +109,8 @@ export const Navbar = () => {
             </DropdownMenu>
           </>
         ) : (
-          <div className="flex space-x-4">
-            <Button variant="ghost" asChild className="text-white hover:text-purple-300">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <Button variant="ghost" asChild className="text-white hover:text-purple-300 justify-start sm:justify-center">
               <Link to="/auth">Login</Link>
             </Button>
             <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" asChild>

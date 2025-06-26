@@ -14,9 +14,12 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, quality = 'standard', size = '1024x1024', user_id } = await req.json();
+    const { prompt, quality = 'standard', size = '1024x1024', user_id, category, style } = await req.json();
+    
+    console.log('Request received:', { prompt, quality, size, user_id });
     
     if (!prompt) {
+      console.error('No prompt provided');
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -25,6 +28,7 @@ serve(async (req) => {
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -33,7 +37,7 @@ serve(async (req) => {
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Calculate credits based on quality
@@ -41,7 +45,9 @@ serve(async (req) => {
       'standard': 3,
       'hd': 8
     };
-    const creditsNeeded = creditsMap[quality as keyof typeof creditsMap] || 5;
+    const creditsNeeded = creditsMap[quality as keyof typeof creditsMap] || 3;
+
+    console.log('Credits needed:', creditsNeeded);
 
     // Check user credits
     const { data: profile, error: profileError } = await supabase
@@ -50,19 +56,23 @@ serve(async (req) => {
       .eq('id', user_id)
       .single();
 
-    if (profileError || !profile) {
+    if (profileError) {
+      console.error('Profile error:', profileError);
       return new Response(JSON.stringify({ error: 'User not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (profile.credits < creditsNeeded) {
+    if (!profile || profile.credits < creditsNeeded) {
+      console.error('Insufficient credits:', profile?.credits, 'needed:', creditsNeeded);
       return new Response(JSON.stringify({ error: 'Insufficient credits' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('Generating image with OpenAI...');
 
     // Generate image with OpenAI
     const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -82,9 +92,11 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI API error:', error);
-      return new Response(JSON.stringify({ error: 'Failed to generate image' }), {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      return new Response(JSON.stringify({ 
+        error: `OpenAI API error: ${response.status} - ${errorText}` 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -94,6 +106,8 @@ serve(async (req) => {
     const imageData = data.data[0].b64_json;
     const imageUrl = `data:image/png;base64,${imageData}`;
 
+    console.log('Image generated successfully');
+
     // Save image to database
     const { data: savedImage, error: saveError } = await supabase
       .from('images')
@@ -102,6 +116,8 @@ serve(async (req) => {
         prompt: prompt,
         quality: quality,
         size: size,
+        category: category,
+        style: style,
         image_data: imageData,
         image_url: imageUrl,
         credits_used: creditsNeeded,
@@ -118,7 +134,7 @@ serve(async (req) => {
       });
     }
 
-    // Deduct credits
+    // Deduct credits using the function
     const { error: creditError } = await supabase.rpc('update_user_credits', {
       user_uuid: user_id,
       credit_change: -creditsNeeded,
@@ -128,7 +144,10 @@ serve(async (req) => {
 
     if (creditError) {
       console.error('Credit deduction error:', creditError);
+      // Don't fail the request if credit deduction fails, just log it
     }
+
+    console.log('Image generation completed successfully');
 
     return new Response(JSON.stringify({ 
       image: savedImage,
@@ -140,7 +159,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Function error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return new Response(JSON.stringify({ 
+      error: `Internal server error: ${error.message}` 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
