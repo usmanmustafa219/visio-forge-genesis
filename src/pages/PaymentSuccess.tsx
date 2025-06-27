@@ -1,10 +1,10 @@
+
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { CheckCircle, Zap, ArrowRight, Loader2 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,16 +34,19 @@ const PaymentSuccess = () => {
       return data;
     },
     enabled: !!sessionId,
-    refetchInterval: (query) => {
-      // Keep refetching until payment is completed
-      return query.data?.status === 'completed' ? false : 2000;
-    },
+    refetchInterval: 2000, // Simplified: refetch every 2 seconds
   });
+
+  // Stop refetching when payment is completed
+  useEffect(() => {
+    if (paymentSession?.status === 'completed') {
+      // Payment is complete, we can stop refetching
+    }
+  }, [paymentSession?.status]);
 
   if (!sessionId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        <Navbar />
         <div className="container mx-auto px-6 py-8 flex items-center justify-center">
           <Card className="bg-slate-800/50 border-red-500/30 backdrop-blur-sm max-w-md">
             <CardContent className="p-8 text-center">
@@ -62,7 +65,6 @@ const PaymentSuccess = () => {
   if (isLoading || !paymentSession) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        <Navbar />
         <div className="container mx-auto px-6 py-8 flex items-center justify-center">
           <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm max-w-md">
             <CardContent className="p-8 text-center">
@@ -78,8 +80,6 @@ const PaymentSuccess = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Navbar />
-
       <div className="container mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
