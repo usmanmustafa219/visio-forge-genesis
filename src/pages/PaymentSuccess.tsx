@@ -34,9 +34,9 @@ const PaymentSuccess = () => {
       return data;
     },
     enabled: !!sessionId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Keep refetching until payment is completed
-      return data?.status === 'completed' ? false : 2000;
+      return query.data?.status === 'completed' ? false : 2000;
     },
   });
 
