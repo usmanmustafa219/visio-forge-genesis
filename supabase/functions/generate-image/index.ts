@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     const { prompt, quality = 'standard', size = '1024x1024', user_id, category, style } = await req.json();
     
-    console.log('Request received:', { prompt, quality, size, user_id });
+    console.log('Request received:', { prompt, quality, size, user_id, category, style });
     
     if (!prompt) {
       console.error('No prompt provided');
@@ -29,7 +29,7 @@ serve(async (req) => {
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       console.error('OpenAI API key not configured');
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+      return new Response(JSON.stringify({ error: 'OpenAI API key not configured. Please contact support.' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -58,7 +58,7 @@ serve(async (req) => {
 
     if (profileError) {
       console.error('Profile error:', profileError);
-      return new Response(JSON.stringify({ error: 'User not found' }), {
+      return new Response(JSON.stringify({ error: 'User profile not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -66,7 +66,7 @@ serve(async (req) => {
 
     if (!profile || profile.credits < creditsNeeded) {
       console.error('Insufficient credits:', profile?.credits, 'needed:', creditsNeeded);
-      return new Response(JSON.stringify({ error: 'Insufficient credits' }), {
+      return new Response(JSON.stringify({ error: `Insufficient credits. You need ${creditsNeeded} credits but only have ${profile?.credits || 0}.` }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -74,37 +74,56 @@ serve(async (req) => {
 
     console.log('Generating image with OpenAI...');
 
-    // Generate image with OpenAI
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
+    // Generate image with OpenAI using the newer gpt-image-1 model
+    const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
+        model: 'gpt-image-1',
         prompt: prompt,
         n: 1,
         size: size,
-        quality: quality,
-        response_format: 'b64_json'
+        quality: quality === 'hd' ? 'high' : 'medium',
+        output_format: 'png'
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+    if (!imageResponse.ok) {
+      const errorText = await imageResponse.text();
+      console.error('OpenAI API error:', imageResponse.status, errorText);
+      
+      let errorMessage = 'Failed to generate image';
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error?.message || errorMessage;
+      } catch (e) {
+        console.error('Error parsing OpenAI error response:', e);
+      }
+      
       return new Response(JSON.stringify({ 
-        error: `OpenAI API error: ${response.status} - ${errorText}` 
+        error: `Image generation failed: ${errorMessage}` 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const data = await response.json();
-    const imageData = data.data[0].b64_json;
-    const imageUrl = `data:image/png;base64,${imageData}`;
+    const imageData = await imageResponse.json();
+    
+    if (!imageData.data || !imageData.data[0]) {
+      console.error('Invalid response from OpenAI:', imageData);
+      return new Response(JSON.stringify({ error: 'Invalid response from image generation service' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // gpt-image-1 returns base64 directly, not b64_json
+    const imageBase64 = imageData.data[0].b64_json || imageData.data[0];
+    const imageUrl = `data:image/png;base64,${imageBase64}`;
 
     console.log('Image generated successfully');
 
@@ -116,9 +135,9 @@ serve(async (req) => {
         prompt: prompt,
         quality: quality,
         size: size,
-        category: category,
-        style: style,
-        image_data: imageData,
+        category: category || null,
+        style: style || null,
+        image_data: imageBase64,
         image_url: imageUrl,
         credits_used: creditsNeeded,
         status: 'completed'
@@ -128,7 +147,7 @@ serve(async (req) => {
 
     if (saveError) {
       console.error('Database save error:', saveError);
-      return new Response(JSON.stringify({ error: 'Failed to save image' }), {
+      return new Response(JSON.stringify({ error: 'Failed to save image to database' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -144,7 +163,7 @@ serve(async (req) => {
 
     if (creditError) {
       console.error('Credit deduction error:', creditError);
-      // Don't fail the request if credit deduction fails, just log it
+      // Continue anyway - image was generated successfully
     }
 
     console.log('Image generation completed successfully');
@@ -152,7 +171,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       image: savedImage,
       imageUrl: imageUrl,
-      creditsUsed: creditsNeeded
+      creditsUsed: creditsNeeded,
+      success: true
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -160,7 +180,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Function error:', error);
     return new Response(JSON.stringify({ 
-      error: `Internal server error: ${error.message}` 
+      error: `Internal server error: ${error.message}`,
+      details: error.stack
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

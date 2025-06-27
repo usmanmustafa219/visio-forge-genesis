@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Zap, Eye, User, Code, Cpu } from 'lucide-react';
+import { Sparkles, Zap, Eye, Code, Cpu } from 'lucide-react';
 
 const About = () => {
   return (
@@ -133,11 +133,15 @@ const About = () => {
             >
               <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm">
                 <CardContent className="p-8">
-                  <div className="flex items-center justify-center mb-8">
-                    <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-6">
-                      <User className="w-12 h-12 text-white" />
+                  <div className="flex flex-col md:flex-row items-center justify-center mb-8">
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden mr-0 md:mr-8 mb-6 md:mb-0 border-4 border-gradient-to-r from-purple-500 to-pink-500">
+                      <img 
+                        src="/lovable-uploads/299958f4-e70c-4029-8fb3-96c3273ce362.png" 
+                        alt="Muhammad Usman Mustafa - CEO" 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <div>
+                    <div className="text-center md:text-left">
                       <h2 className="text-2xl font-bold mb-2">Meet Our CEO</h2>
                       <h3 className="text-xl text-purple-300 font-semibold">Muhammad Usman Mustafa</h3>
                       <p className="text-gray-400">Experienced AI Engineer & Software Architect</p>
