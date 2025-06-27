@@ -26,14 +26,17 @@ serve(async (req) => {
       });
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    // Try both possible secret names for OpenAI API key
+    const openAIApiKey = Deno.env.get('OpenAI_API') || Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
+      console.error('OpenAI API key not found in environment variables');
       return new Response(JSON.stringify({ error: 'OpenAI API key not configured. Please contact support.' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('OpenAI API key found, proceeding with generation...');
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -72,9 +75,9 @@ serve(async (req) => {
       });
     }
 
-    console.log('Generating image with OpenAI...');
+    console.log('Generating image with OpenAI using gpt-image-1...');
 
-    // Generate image with OpenAI using the newer gpt-image-1 model
+    // Generate image with OpenAI using gpt-image-1
     const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -91,6 +94,8 @@ serve(async (req) => {
       }),
     });
 
+    console.log('OpenAI API response status:', imageResponse.status);
+
     if (!imageResponse.ok) {
       const errorText = await imageResponse.text();
       console.error('OpenAI API error:', imageResponse.status, errorText);
@@ -99,6 +104,7 @@ serve(async (req) => {
       try {
         const errorData = JSON.parse(errorText);
         errorMessage = errorData.error?.message || errorMessage;
+        console.error('Parsed error:', errorData);
       } catch (e) {
         console.error('Error parsing OpenAI error response:', e);
       }
@@ -112,6 +118,7 @@ serve(async (req) => {
     }
 
     const imageData = await imageResponse.json();
+    console.log('OpenAI response received, processing...');
     
     if (!imageData.data || !imageData.data[0]) {
       console.error('Invalid response from OpenAI:', imageData);
@@ -121,11 +128,18 @@ serve(async (req) => {
       });
     }
 
-    // gpt-image-1 returns base64 directly, not b64_json
+    // Extract base64 image data
     const imageBase64 = imageData.data[0].b64_json || imageData.data[0];
-    const imageUrl = `data:image/png;base64,${imageBase64}`;
+    if (!imageBase64) {
+      console.error('No image data received from OpenAI');
+      return new Response(JSON.stringify({ error: 'No image data received from generation service' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    console.log('Image generated successfully');
+    const imageUrl = `data:image/png;base64,${imageBase64}`;
+    console.log('Image generated successfully, saving to database...');
 
     // Save image to database
     const { data: savedImage, error: saveError } = await supabase
@@ -152,6 +166,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('Image saved to database, updating user credits...');
 
     // Deduct credits using the function
     const { error: creditError } = await supabase.rpc('update_user_credits', {
