@@ -1,9 +1,7 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Zap, Check, Star, CreditCard, Loader2 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
@@ -59,7 +57,6 @@ const Credits = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        <Navbar />
         <div className="container mx-auto px-6 py-8 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
         </div>
@@ -69,8 +66,6 @@ const Credits = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Navbar />
-
       <div className="container mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

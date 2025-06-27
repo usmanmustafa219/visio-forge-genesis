@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,15 +33,14 @@ const PaymentSuccess = () => {
       return data;
     },
     enabled: !!sessionId,
-    refetchInterval: 2000, // Simplified: refetch every 2 seconds
+    refetchInterval: (query) => {
+      // Keep refetching until payment is completed
+      if (query.state.data?.status === 'completed') {
+        return false;
+      }
+      return 2000;
+    },
   });
-
-  // Stop refetching when payment is completed
-  useEffect(() => {
-    if (paymentSession?.status === 'completed') {
-      // Payment is complete, we can stop refetching
-    }
-  }, [paymentSession?.status]);
 
   if (!sessionId) {
     return (
