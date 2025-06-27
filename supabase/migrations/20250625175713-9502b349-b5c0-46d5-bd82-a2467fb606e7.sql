@@ -6,7 +6,7 @@ CREATE TABLE public.profiles (
   first_name TEXT,
   last_name TEXT,
   avatar_url TEXT,
-  credits INTEGER NOT NULL DEFAULT 3,
+  credits INTEGER NOT NULL DEFAULT 500,
   total_credits_purchased INTEGER NOT NULL DEFAULT 0,
   total_credits_consumed INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
