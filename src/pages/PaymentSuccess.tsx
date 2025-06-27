@@ -34,10 +34,7 @@ const PaymentSuccess = () => {
       return data;
     },
     enabled: !!sessionId,
-    refetchInterval: (query) => {
-      // Keep refetching until payment is completed
-      return query.data?.status === 'completed' ? false : 2000;
-    },
+    refetchInterval: paymentSession?.status === 'completed' ? false : 2000,
   });
 
   if (!sessionId) {
