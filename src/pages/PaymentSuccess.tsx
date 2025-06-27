@@ -36,7 +36,7 @@ const PaymentSuccess = () => {
     enabled: !!sessionId,
     refetchInterval: (data) => {
       // Keep refetching until payment is completed
-      return data?.data?.status === 'completed' ? false : 2000;
+      return data?.status === 'completed' ? false : 2000;
     },
   });
 
