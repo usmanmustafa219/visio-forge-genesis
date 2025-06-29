@@ -26,11 +26,10 @@ serve(async (req) => {
       });
     }
 
-    // Try both possible secret names for OpenAI API key
-    const openAIApiKey = Deno.env.get('OpenAI_API') || Deno.env.get('OPENAI_API_KEY');
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('OpenAI_API');
     if (!openAIApiKey) {
-      console.error('OpenAI API key not found in environment variables');
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured. Please contact support.' }), {
+      console.error('OpenAI API key not found');
+      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -38,12 +37,10 @@ serve(async (req) => {
 
     console.log('OpenAI API key found, proceeding with generation...');
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Calculate credits based on quality
     const creditsMap = {
       'standard': 3,
       'hd': 8
@@ -52,7 +49,6 @@ serve(async (req) => {
 
     console.log('Credits needed:', creditsNeeded);
 
-    // Check user credits
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('credits')
@@ -75,9 +71,17 @@ serve(async (req) => {
       });
     }
 
-    console.log('Generating image with OpenAI using gpt-image-1...');
+    // Enhanced prompt with style and category
+    let enhancedPrompt = prompt;
+    if (style && style !== '') {
+      enhancedPrompt += `, ${style} style`;
+    }
+    if (category && category !== '') {
+      enhancedPrompt += `, ${category} theme`;
+    }
 
-    // Generate image with OpenAI using gpt-image-1
+    console.log('Generating image with enhanced prompt:', enhancedPrompt);
+
     const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -86,7 +90,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gpt-image-1',
-        prompt: prompt,
+        prompt: enhancedPrompt,
         n: 1,
         size: size,
         quality: quality === 'hd' ? 'high' : 'medium',
@@ -104,7 +108,6 @@ serve(async (req) => {
       try {
         const errorData = JSON.parse(errorText);
         errorMessage = errorData.error?.message || errorMessage;
-        console.error('Parsed error:', errorData);
       } catch (e) {
         console.error('Error parsing OpenAI error response:', e);
       }
@@ -128,7 +131,6 @@ serve(async (req) => {
       });
     }
 
-    // Extract base64 image data
     const imageBase64 = imageData.data[0].b64_json || imageData.data[0];
     if (!imageBase64) {
       console.error('No image data received from OpenAI');
@@ -141,7 +143,6 @@ serve(async (req) => {
     const imageUrl = `data:image/png;base64,${imageBase64}`;
     console.log('Image generated successfully, saving to database...');
 
-    // Save image to database
     const { data: savedImage, error: saveError } = await supabase
       .from('images')
       .insert({
@@ -169,7 +170,6 @@ serve(async (req) => {
 
     console.log('Image saved to database, updating user credits...');
 
-    // Deduct credits using the function
     const { error: creditError } = await supabase.rpc('update_user_credits', {
       user_uuid: user_id,
       credit_change: -creditsNeeded,
@@ -179,7 +179,6 @@ serve(async (req) => {
 
     if (creditError) {
       console.error('Credit deduction error:', creditError);
-      // Continue anyway - image was generated successfully
     }
 
     console.log('Image generation completed successfully');

@@ -2,24 +2,117 @@
 import { motion } from 'framer-motion';
 import { useImages } from '@/hooks/useImages';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Download, Eye } from 'lucide-react';
+import { Loader2, Download, Eye, Share, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Gallery = () => {
-  const { images, isLoading } = useImages();
+  const { images, isLoading, refetch } = useImages();
+  const { user } = useAuth();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDownload = (imageData: string, prompt: string) => {
-    const link = document.createElement('a');
-    link.href = `data:image/png;base64,${imageData}`;
-    link.download = `visiomancer-${prompt.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '-')}.png`;
-    link.click();
+    try {
+      const link = document.createElement('a');
+      link.href = `data:image/png;base64,${imageData}`;
+      link.download = `visiomancer-${prompt.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '-')}.png`;
+      link.click();
+      toast.success('Image downloaded successfully!');
+    } catch (error) {
+      toast.error('Failed to download image');
+    }
+  };
+
+  const handleShare = async (imageData: string, prompt: string, platform: string) => {
+    try {
+      const shareText = `Check out this AI-generated image: ${prompt}`;
+      const shareUrl = window.location.origin;
+      
+      let url = '';
+      switch (platform) {
+        case 'twitter':
+          url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+          break;
+        case 'facebook':
+          url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+          break;
+        case 'linkedin':
+          url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`;
+          break;
+        case 'whatsapp':
+          url = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+          break;
+        default:
+          if (navigator.share) {
+            await navigator.share({
+              title: 'AI Generated Image',
+              text: shareText,
+              url: shareUrl,
+            });
+            return;
+          }
+          break;
+      }
+      
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      toast.error('Failed to share image');
+    }
+  };
+
+  const handleDelete = async (imageId: string) => {
+    if (!user) return;
+    
+    setDeletingId(imageId);
+    try {
+      const { error } = await supabase
+        .from('images')
+        .delete()
+        .eq('id', imageId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Image deleted successfully!');
+      refetch();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete image');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-purple-400 mx-auto mb-4" />
+            <p className="text-gray-300">Loading your gallery...</p>
+          </div>
         </div>
       </div>
     );
@@ -38,7 +131,7 @@ const Gallery = () => {
               My Gallery
             </h1>
             <p className="text-gray-300 text-base sm:text-lg">
-              Your AI-generated masterpieces
+              Your AI-generated masterpieces ({images.length} images)
             </p>
           </div>
 
@@ -63,22 +156,89 @@ const Gallery = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm overflow-hidden">
+                  <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm overflow-hidden hover:border-purple-400/50 transition-colors">
                     <CardContent className="p-0">
                       <div className="aspect-square relative group">
                         <img
                           src={image.image_url || `data:image/png;base64,${image.image_data}`}
                           alt={image.prompt}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
                           <Button
                             size="sm"
                             variant="secondary"
                             onClick={() => handleDownload(image.image_data!, image.prompt)}
+                            className="bg-white/20 hover:bg-white/30"
                           >
                             <Download className="w-4 h-4" />
                           </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="bg-white/20 hover:bg-white/30"
+                              >
+                                <Share className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-slate-800 border-purple-500/30">
+                              <DropdownMenuItem onClick={() => handleShare(image.image_data!, image.prompt, 'twitter')}>
+                                Share on Twitter
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShare(image.image_data!, image.prompt, 'facebook')}>
+                                Share on Facebook
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShare(image.image_data!, image.prompt, 'linkedin')}>
+                                Share on LinkedIn
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShare(image.image_data!, image.prompt, 'whatsapp')}>
+                                Share on WhatsApp
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShare(image.image_data!, image.prompt, 'native')}>
+                                Share via...
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="bg-red-500/80 hover:bg-red-600/80"
+                                disabled={deletingId === image.id}
+                              >
+                                {deletingId === image.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-slate-800 border-purple-500/30 text-white">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Image</AlertDialogTitle>
+                                <AlertDialogDescription className="text-gray-300">
+                                  Are you sure you want to delete this image? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-gray-600 hover:bg-gray-700 text-white border-gray-500">
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(image.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                       <div className="p-3 sm:p-4">
@@ -89,6 +249,10 @@ const Gallery = () => {
                           <span>{image.size}</span>
                           <span>{image.quality}</span>
                           <span>{image.credits_used} credits</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                          <span>{image.category || 'General'}</span>
+                          <span>{image.style || 'Default'}</span>
                         </div>
                       </div>
                     </CardContent>

@@ -1,7 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, User, LogOut, Zap, Image, CreditCard, Menu, X } from 'lucide-react';
+import { Eye, User, LogOut, Zap, Image, CreditCard, Menu, X, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useState } from 'react';
@@ -39,6 +39,10 @@ export const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
+            <Link to="/" className="text-gray-300 hover:text-purple-300 transition-colors flex items-center space-x-1">
+              <Home className="w-4 h-4" />
+              <span>Home</span>
+            </Link>
             <Link to="/samples" className="text-gray-300 hover:text-purple-300 transition-colors">
               Samples
             </Link>
@@ -125,6 +129,14 @@ export const Header = () => {
           <div className="md:hidden border-t border-purple-500/20 py-4">
             <div className="flex flex-col space-y-4">
               {/* Navigation Links */}
+              <Link 
+                to="/" 
+                className="text-gray-300 hover:text-purple-300 transition-colors px-2 flex items-center space-x-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Link>
               <Link 
                 to="/samples" 
                 className="text-gray-300 hover:text-purple-300 transition-colors px-2"
