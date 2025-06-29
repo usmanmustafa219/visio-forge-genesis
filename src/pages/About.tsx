@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, Users, Target, Award, Code, Zap } from 'lucide-react';
@@ -6,16 +5,22 @@ import { Sparkles, Users, Target, Award, Code, Zap } from 'lucide-react';
 const About = () => {
   const teamMembers = [
     {
-      name: "Bilal Khursheed",
+      name: "M Usman Mustafa",
       role: "CEO & Co-Founder",
       image: "/lovable-uploads/299958f4-e70c-4029-8fb3-96c3273ce362.png",
-      description: "Experienced software architect and visionary leader with over 10 years in software development and AI technologies."
+      description: "Visionary leader and experienced software architect with over 10 years in software development and AI technologies."
     },
     {
       name: "Muhammad Ali",
       role: "COO & Co-Founder", 
       image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
       description: "Expert software developer and operations specialist, ensuring seamless delivery of cutting-edge solutions."
+    },
+    {
+      name: "Bilal Khursheed",
+      role: "CTO & Co-Founder",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
+      description: "Technical architect and innovation leader, driving the technological vision and development strategies."
     }
   ];
 
@@ -119,7 +124,7 @@ const About = () => {
             <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               Meet Our Leadership
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
               {teamMembers.map((member, index) => (
                 <motion.div
                   key={index}

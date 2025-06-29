@@ -12,37 +12,37 @@ const sampleImages = [
     id: 1,
     prompt: "A mystical forest with glowing mushrooms and floating crystals under a starry sky, ethereal lighting, magical atmosphere",
     category: "Fantasy",
-    image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 2,
     prompt: "Cyberpunk cityscape at night with neon lights, flying cars, and holographic advertisements, futuristic architecture",
     category: "Sci-Fi",
-    image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 3,
     prompt: "Portrait of a wise elderly wizard with a long white beard, magical robes, holding a glowing staff, fantasy art style",
     category: "Portrait",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 4,
     prompt: "Serene mountain lake at sunrise with misty peaks, reflection in water, peaceful nature scene, photorealistic",
     category: "Nature",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 5,
     prompt: "Abstract geometric shapes in vibrant colors, flowing patterns, digital art, modern contemporary style",
     category: "Abstract",
-    image: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 6,
     prompt: "Ancient Greek temple with marble columns, golden hour lighting, architectural details, classical style",
     category: "Architecture",
-    image: "https://images.unsplash.com/photo-1555993539-1732b0258815?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1539650116574-75c0c6d73273?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 7,
@@ -92,22 +92,28 @@ const Samples = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {sampleImages.map((sample) => (
               <motion.div
                 key={sample.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: sample.id * 0.1 }}
+                className="w-full"
               >
-                <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm overflow-hidden group hover:border-purple-400/50 transition-colors">
-                  <CardContent className="p-0">
+                <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm overflow-hidden group hover:border-purple-400/50 transition-colors h-full flex flex-col">
+                  <CardContent className="p-0 flex-1 flex flex-col">
                     <div className="aspect-square relative overflow-hidden">
                       <img
                         src={sample.image}
                         alt={sample.prompt}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
+                        onError={(e) => {
+                          console.log(`Failed to load image: ${sample.image}`);
+                          // Fallback to a placeholder if image fails to load
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&h=800&fit=crop&crop=center";
+                        }}
                       />
                       <div className="absolute top-2 right-2">
                         <span className="bg-purple-600/80 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
@@ -115,37 +121,37 @@ const Samples = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="p-4 sm:p-6">
-                      <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-3">
+                    <div className="p-3 sm:p-4 flex-1 flex flex-col">
+                      <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-3 flex-1">
                         {sample.prompt}
                       </p>
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex flex-col gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => copyPrompt(sample.prompt)}
-                          className="flex-1 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
+                          className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10 text-xs sm:text-sm"
                         >
-                          <Copy className="w-4 h-4 mr-2" />
+                          <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Copy Prompt
                         </Button>
                         {user ? (
                           <Button
                             size="sm"
                             onClick={() => usePrompt(sample.prompt)}
-                            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-xs sm:text-sm"
                           >
-                            <Sparkles className="w-4 h-4 mr-2" />
+                            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                             Use Prompt
                           </Button>
                         ) : (
                           <Button
                             size="sm"
                             asChild
-                            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-xs sm:text-sm"
                           >
                             <Link to="/auth">
-                              <Sparkles className="w-4 h-4 mr-2" />
+                              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                               Sign In
                             </Link>
                           </Button>
