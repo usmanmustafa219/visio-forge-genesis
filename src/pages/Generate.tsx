@@ -5,9 +5,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
-import { Sparkles, Wand2, Settings, Loader2 } from 'lucide-react';
+import { Sparkles, Wand2, Settings, Loader2, AlertCircle } from 'lucide-react';
 import { useImageGeneration } from '@/hooks/useImageGeneration';
 import { useSearchParams } from 'react-router-dom';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Generate = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +18,7 @@ const Generate = () => {
   const [quality, setQuality] = useState('standard');
   const [size, setSize] = useState('1024x1024');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
 
   const { generateImage, isGenerating } = useImageGeneration();
 
@@ -28,11 +30,35 @@ const Generate = () => {
     }
   }, [searchParams]);
 
-  const handleGenerate = () => {
-    if (!prompt.trim()) return;
+  // Simulate progress during generation
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isGenerating) {
+      setGenerationProgress(0);
+      interval = setInterval(() => {
+        setGenerationProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 1000);
+    } else {
+      setGenerationProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
+  const handleGenerate = () => {
+    if (!prompt.trim()) {
+      return;
+    }
+
+    if (prompt.trim().length < 3) {
+      return;
+    }
+
+    setGeneratedImage(null);
     generateImage({
-      prompt,
+      prompt: prompt.trim(),
       quality,
       size,
       category,
@@ -40,9 +66,12 @@ const Generate = () => {
     }, {
       onSuccess: (data) => {
         setGeneratedImage(data.imageUrl);
+        setGenerationProgress(100);
       }
     });
   };
+
+  const isPromptValid = prompt.trim().length >= 3;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
@@ -76,13 +105,20 @@ const Generate = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Prompt</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Prompt <span className="text-red-400">*</span>
+                  </label>
                   <Textarea
                     placeholder="A mystical forest with glowing mushrooms and floating crystals under a starry sky..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     className="bg-slate-700/50 border-purple-500/30 text-white placeholder-gray-400 min-h-[100px] text-sm sm:text-base"
                   />
+                  {prompt.length > 0 && prompt.length < 3 && (
+                    <p className="text-red-400 text-xs mt-1">
+                      Please provide at least 3 characters for a better prompt
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -150,15 +186,24 @@ const Generate = () => {
                   </div>
                 </div>
 
+                {!isPromptValid && prompt.length > 0 && (
+                  <Alert className="bg-red-900/20 border-red-500/30">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-red-300">
+                      Please provide a more detailed prompt (at least 3 characters)
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <Button
                   onClick={handleGenerate}
-                  disabled={!prompt.trim() || isGenerating}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-base sm:text-lg py-3 sm:py-6"
+                  disabled={!isPromptValid || isGenerating}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-base sm:text-lg py-3 sm:py-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isGenerating ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Generating...
+                      Generating... {Math.round(generationProgress)}%
                     </>
                   ) : (
                     <>
@@ -187,7 +232,14 @@ const Generate = () => {
                     <div className="text-center text-gray-400 p-4">
                       <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" />
                       <p className="text-lg font-medium mb-2">Creating Magic</p>
-                      <p className="text-sm">Please wait while we generate your image...</p>
+                      <p className="text-sm mb-2">Please wait while we generate your image...</p>
+                      <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                        <div 
+                          className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${generationProgress}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500">{Math.round(generationProgress)}% complete</p>
                     </div>
                   ) : generatedImage ? (
                     <img 

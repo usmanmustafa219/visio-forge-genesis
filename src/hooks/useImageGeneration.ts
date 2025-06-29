@@ -22,6 +22,11 @@ export const useImageGeneration = () => {
 
       console.log('Starting image generation with params:', params);
 
+      // Validate prompt
+      if (!params.prompt || params.prompt.trim().length < 3) {
+        throw new Error('Please provide a more detailed prompt (at least 3 characters)');
+      }
+
       try {
         const { data, error } = await supabase.functions.invoke('generate-image', {
           body: {
@@ -38,7 +43,7 @@ export const useImageGeneration = () => {
         }
 
         if (!data) {
-          throw new Error('No data returned from image generation');
+          throw new Error('No response from image generation service');
         }
 
         if (data.error) {
@@ -52,8 +57,18 @@ export const useImageGeneration = () => {
 
         console.log('Image generation successful:', data);
         return data;
-      } catch (err) {
+      } catch (err: any) {
         console.error('Image generation error:', err);
+        
+        // Handle specific error types
+        if (err.message?.includes('fetch')) {
+          throw new Error('Network error. Please check your connection and try again.');
+        }
+        
+        if (err.message?.includes('timeout')) {
+          throw new Error('Request timed out. Please try again.');
+        }
+        
         throw err;
       }
     },
@@ -70,10 +85,16 @@ export const useImageGeneration = () => {
       if (error.message) {
         if (error.message.includes('Insufficient credits')) {
           message = error.message;
-        } else if (error.message.includes('API key')) {
-          message = 'Service temporarily unavailable. Please try again later.';
+        } else if (error.message.includes('content policy')) {
+          message = 'Content policy violation. Please modify your prompt and try again.';
         } else if (error.message.includes('rate limit')) {
           message = 'Rate limit exceeded. Please wait a moment and try again.';
+        } else if (error.message.includes('Network error')) {
+          message = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('timeout')) {
+          message = 'Request timed out. Please try again.';
+        } else if (error.message.includes('Service temporarily unavailable')) {
+          message = 'Service temporarily unavailable. Please try again later.';
         } else {
           message = error.message;
         }
@@ -81,6 +102,9 @@ export const useImageGeneration = () => {
       
       toast.error(message);
     },
+    // Increase timeout for image generation
+    retry: 1,
+    retryDelay: 2000,
   });
 
   return {

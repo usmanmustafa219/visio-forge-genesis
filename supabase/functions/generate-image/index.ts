@@ -29,7 +29,7 @@ serve(async (req) => {
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('OpenAI_API');
     if (!openAIApiKey) {
       console.error('OpenAI API key not found');
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+      return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -82,6 +82,7 @@ serve(async (req) => {
 
     console.log('Generating image with enhanced prompt:', enhancedPrompt);
 
+    // Use DALL-E 3 for better quality and reliability
     const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -89,12 +90,12 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: 'dall-e-3',
         prompt: enhancedPrompt,
         n: 1,
         size: size,
-        quality: quality === 'hd' ? 'high' : 'medium',
-        output_format: 'png'
+        quality: quality === 'hd' ? 'hd' : 'standard',
+        response_format: 'b64_json'
       }),
     });
 
@@ -107,13 +108,20 @@ serve(async (req) => {
       let errorMessage = 'Failed to generate image';
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error?.message || errorMessage;
+        if (errorData.error?.message) {
+          errorMessage = errorData.error.message;
+          if (errorMessage.includes('content policy')) {
+            errorMessage = 'Content policy violation. Please modify your prompt and try again.';
+          } else if (errorMessage.includes('rate limit')) {
+            errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+          }
+        }
       } catch (e) {
         console.error('Error parsing OpenAI error response:', e);
       }
       
       return new Response(JSON.stringify({ 
-        error: `Image generation failed: ${errorMessage}` 
+        error: errorMessage
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -123,7 +131,7 @@ serve(async (req) => {
     const imageData = await imageResponse.json();
     console.log('OpenAI response received, processing...');
     
-    if (!imageData.data || !imageData.data[0]) {
+    if (!imageData.data || !imageData.data[0] || !imageData.data[0].b64_json) {
       console.error('Invalid response from OpenAI:', imageData);
       return new Response(JSON.stringify({ error: 'Invalid response from image generation service' }), {
         status: 500,
@@ -131,15 +139,7 @@ serve(async (req) => {
       });
     }
 
-    const imageBase64 = imageData.data[0].b64_json || imageData.data[0];
-    if (!imageBase64) {
-      console.error('No image data received from OpenAI');
-      return new Response(JSON.stringify({ error: 'No image data received from generation service' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
+    const imageBase64 = imageData.data[0].b64_json;
     const imageUrl = `data:image/png;base64,${imageBase64}`;
     console.log('Image generated successfully, saving to database...');
 
@@ -195,8 +195,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Function error:', error);
     return new Response(JSON.stringify({ 
-      error: `Internal server error: ${error.message}`,
-      details: error.stack
+      error: `Internal server error: ${error.message}`
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
