@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -241,7 +240,7 @@ const Contact = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </div>
