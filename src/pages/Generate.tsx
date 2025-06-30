@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,7 +41,8 @@ const Generate = () => {
       return;
     }
 
-    const generationParams = {
+    // Create base params object
+    const baseParams = {
       prompt,
       quality,
       category: category || undefined,
@@ -48,10 +50,10 @@ const Generate = () => {
       contentType,
     };
 
-    // Only include size for images
-    if (contentType === 'image') {
-      generationParams.size = size;
-    }
+    // Add size only for images by creating a new object
+    const generationParams = contentType === 'image' 
+      ? { ...baseParams, size }
+      : baseParams;
 
     generateImage(generationParams, {
       onSuccess: (data) => {
