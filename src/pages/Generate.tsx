@@ -19,8 +19,8 @@ const Generate = () => {
   const [originalPrompt, setOriginalPrompt] = useState('');
   const [quality, setQuality] = useState('standard');
   const [size, setSize] = useState('1024x1024');
-  const [category, setCategory] = useState('');
-  const [style, setStyle] = useState('');
+  const [category, setCategory] = useState('none');
+  const [style, setStyle] = useState('none');
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [contentType, setContentType] = useState<'image' | 'video'>('image');
   const [isPromptEnhanced, setIsPromptEnhanced] = useState(false);
@@ -45,8 +45,8 @@ const Generate = () => {
     const baseParams = {
       prompt,
       quality,
-      category: category || undefined,
-      style: style || undefined,
+      category: category === 'none' ? undefined : category,
+      style: style === 'none' ? undefined : style,
       contentType,
     };
 
@@ -207,7 +207,7 @@ const Generate = () => {
                         <SelectValue placeholder="Choose category" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="fantasy">Fantasy</SelectItem>
                         <SelectItem value="sci-fi">Sci-Fi</SelectItem>
                         <SelectItem value="nature">Nature</SelectItem>
@@ -224,7 +224,7 @@ const Generate = () => {
                         <SelectValue placeholder="Choose style" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="photorealistic">Photorealistic</SelectItem>
                         <SelectItem value="digital art">Digital Art</SelectItem>
                         <SelectItem value="oil painting">Oil Painting</SelectItem>
