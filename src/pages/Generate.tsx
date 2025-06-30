@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +20,7 @@ const Generate = () => {
   const [size, setSize] = useState('1024x1024');
   const [category, setCategory] = useState('');
   const [style, setStyle] = useState('');
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [contentType, setContentType] = useState<'image' | 'video'>('image');
   const [isPromptEnhanced, setIsPromptEnhanced] = useState(false);
 
@@ -41,22 +40,28 @@ const Generate = () => {
       return;
     }
 
-    generateImage(
-      {
-        prompt,
-        quality,
-        size,
-        category: category || undefined,
-        style: style || undefined,
+    const generationParams = {
+      prompt,
+      quality,
+      category: category || undefined,
+      style: style || undefined,
+      contentType,
+    };
+
+    // Only include size for images
+    if (contentType === 'image') {
+      generationParams.size = size;
+    }
+
+    generateImage(generationParams, {
+      onSuccess: (data) => {
+        if (contentType === 'video' && data.videoUrl) {
+          setGeneratedContent(data.videoUrl);
+        } else if (contentType === 'image' && data.imageUrl) {
+          setGeneratedContent(data.imageUrl);
+        }
       },
-      {
-        onSuccess: (data) => {
-          if (data.imageUrl) {
-            setGeneratedImage(data.imageUrl);
-          }
-        },
-      }
-    );
+    });
   };
 
   const handleEnhancePrompt = () => {
@@ -80,15 +85,23 @@ const Generate = () => {
     setOriginalPrompt('');
   };
 
-  const downloadImage = () => {
-    if (generatedImage) {
+  const downloadContent = () => {
+    if (generatedContent) {
       const link = document.createElement('a');
-      link.href = generatedImage;
-      link.download = `visiomancer-${Date.now()}.png`;
+      link.href = generatedContent;
+      const extension = contentType === 'video' ? 'mp4' : 'png';
+      link.download = `visiomancer-${contentType}-${Date.now()}.${extension}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
+  };
+
+  const getCreditsNeeded = () => {
+    if (contentType === 'video') {
+      return quality === 'hd' ? 25 : 15;
+    }
+    return quality === 'hd' ? 8 : 3;
   };
 
   return (
@@ -136,7 +149,7 @@ const Generate = () => {
                       className={`flex-1 ${contentType === 'video' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-500/30 text-purple-300 hover:bg-purple-500/10'}`}
                     >
                       <Video className="w-4 h-4 mr-2" />
-                      GIF Video
+                      Video
                     </Button>
                   </div>
                 </div>
@@ -221,21 +234,30 @@ const Generate = () => {
                   </div>
                 </div>
 
-                {/* Quality and Size (Only for Images) */}
-                {contentType === 'image' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-gray-300">Quality</Label>
-                      <Select value={quality} onValueChange={setQuality}>
-                        <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                          <SelectItem value="standard">Standard (3 credits)</SelectItem>
-                          <SelectItem value="hd">HD (8 credits)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                {/* Quality and Size (Size only for Images) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Quality</Label>
+                    <Select value={quality} onValueChange={setQuality}>
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
+                        {contentType === 'video' ? (
+                          <>
+                            <SelectItem value="standard">Standard (15 credits)</SelectItem>
+                            <SelectItem value="hd">HD (25 credits)</SelectItem>
+                          </>
+                        ) : (
+                          <>
+                            <SelectItem value="standard">Standard (3 credits)</SelectItem>
+                            <SelectItem value="hd">HD (8 credits)</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {contentType === 'image' && (
                     <div className="space-y-2">
                       <Label className="text-gray-300">Size</Label>
                       <Select value={size} onValueChange={setSize}>
@@ -249,8 +271,8 @@ const Generate = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* Generate Button */}
                 <Button
@@ -266,16 +288,10 @@ const Generate = () => {
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5 mr-2" />
-                      Generate {contentType === 'video' ? 'GIF Video' : 'Image'}
+                      Generate {contentType === 'video' ? 'Video' : 'Image'} ({getCreditsNeeded()} credits)
                     </>
                   )}
                 </Button>
-
-                {contentType === 'video' && (
-                  <p className="text-sm text-yellow-300 text-center">
-                    ⚠️ GIF Video generation is coming soon! Currently generates static images.
-                  </p>
-                )}
               </CardContent>
             </Card>
 
@@ -283,32 +299,51 @@ const Generate = () => {
             <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <ImageIcon className="w-6 h-6 text-cyan-400" />
+                  {contentType === 'video' ? (
+                    <Video className="w-6 h-6 text-cyan-400" />
+                  ) : (
+                    <ImageIcon className="w-6 h-6 text-cyan-400" />
+                  )}
                   <span>Generated Result</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {generatedImage ? (
+                {generatedContent ? (
                   <div className="space-y-4">
                     <div className="aspect-square bg-slate-700/30 rounded-lg overflow-hidden">
-                      <img
-                        src={generatedImage}
-                        alt="Generated"
-                        className="w-full h-full object-contain"
-                      />
+                      {contentType === 'video' ? (
+                        <video
+                          src={generatedContent}
+                          controls
+                          autoPlay
+                          loop
+                          muted
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <img
+                          src={generatedContent}
+                          alt="Generated"
+                          className="w-full h-full object-contain"
+                        />
+                      )}
                     </div>
                     <Button
-                      onClick={downloadImage}
+                      onClick={downloadContent}
                       className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
                     >
                       <Download className="w-5 h-5 mr-2" />
-                      Download Image
+                      Download {contentType === 'video' ? 'Video' : 'Image'}
                     </Button>
                   </div>
                 ) : (
                   <div className="aspect-square bg-slate-700/30 rounded-lg flex items-center justify-center border-2 border-dashed border-purple-500/30">
                     <div className="text-center">
-                      <ImageIcon className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                      {contentType === 'video' ? (
+                        <Video className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                      ) : (
+                        <ImageIcon className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                      )}
                       <p className="text-gray-400">Your generated {contentType} will appear here</p>
                     </div>
                   </div>

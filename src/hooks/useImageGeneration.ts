@@ -4,23 +4,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-interface GenerateImageParams {
+interface GenerateContentParams {
   prompt: string;
   quality?: string;
   size?: string;
   category?: string;
   style?: string;
+  contentType?: 'image' | 'video';
 }
 
 export const useImageGeneration = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const generateImageMutation = useMutation({
-    mutationFn: async (params: GenerateImageParams) => {
+  const generateContentMutation = useMutation({
+    mutationFn: async (params: GenerateContentParams) => {
       if (!user) throw new Error('User not authenticated');
 
-      console.log('Starting image generation with params:', params);
+      console.log('Starting content generation with params:', params);
 
       // Validate prompt
       if (!params.prompt || params.prompt.trim().length < 3) {
@@ -39,11 +40,11 @@ export const useImageGeneration = () => {
 
         if (error) {
           console.error('Supabase function error:', error);
-          throw new Error(error.message || 'Failed to generate image');
+          throw new Error(error.message || `Failed to generate ${params.contentType || 'image'}`);
         }
 
         if (!data) {
-          throw new Error('No response from image generation service');
+          throw new Error(`No response from ${params.contentType || 'image'} generation service`);
         }
 
         if (data.error) {
@@ -52,13 +53,13 @@ export const useImageGeneration = () => {
         }
 
         if (!data.success) {
-          throw new Error('Image generation was not successful');
+          throw new Error(`${params.contentType || 'Image'} generation was not successful`);
         }
 
-        console.log('Image generation successful:', data);
+        console.log('Content generation successful:', data);
         return data;
       } catch (err: any) {
-        console.error('Image generation error:', err);
+        console.error('Content generation error:', err);
         
         // Handle specific error types
         if (err.message?.includes('fetch')) {
@@ -72,16 +73,21 @@ export const useImageGeneration = () => {
         throw err;
       }
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['images'] });
-      toast.success('Image generated successfully!');
-      console.log('Image generation completed successfully');
-    },
-    onError: (error: any) => {
-      console.error('Image generation mutation error:', error);
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
       
-      let message = 'Failed to generate image';
+      const contentType = variables.contentType || 'image';
+      toast.success(`${contentType === 'video' ? 'Video' : 'Image'} generated successfully!`);
+      console.log('Content generation completed successfully');
+    },
+    onError: (error: any, variables) => {
+      console.error('Content generation mutation error:', error);
+      
+      const contentType = variables.contentType || 'image';
+      let message = `Failed to generate ${contentType}`;
+      
       if (error.message) {
         if (error.message.includes('Insufficient credits')) {
           message = error.message;
@@ -102,13 +108,13 @@ export const useImageGeneration = () => {
       
       toast.error(message);
     },
-    // Increase timeout for image generation
+    // Increase timeout for content generation
     retry: 1,
     retryDelay: 2000,
   });
 
   return {
-    generateImage: generateImageMutation.mutate,
-    isGenerating: generateImageMutation.isPending,
+    generateImage: generateContentMutation.mutate,
+    isGenerating: generateContentMutation.isPending,
   };
 };
