@@ -12,7 +12,7 @@ const sampleImages = [
     id: 1,
     prompt: "A mystical forest with glowing mushrooms and floating crystals under a starry sky, ethereal lighting, magical atmosphere",
     category: "Fantasy",
-    image: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 2,
@@ -34,21 +34,21 @@ const sampleImages = [
   },
   {
     id: 5,
-    prompt: "Abstract geometric shapes in vibrant colors, flowing patterns, digital art, modern contemporary style",
+    prompt: "Abstract fluid art with vibrant neon colors, flowing organic shapes, digital painting, contemporary modern style",
     category: "Abstract",
-    image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 6,
-    prompt: "Ancient Greek temple with marble columns, golden hour lighting, architectural details, classical style",
+    prompt: "Modern glass skyscraper with geometric patterns, minimalist architecture, golden hour lighting, urban design",
     category: "Architecture",
-    image: "https://images.unsplash.com/photo-1539650116574-75c0c6d73273?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 7,
-    prompt: "Majestic dragon soaring through cloudy skies, detailed scales, fantasy creature, epic scene",
+    prompt: "Epic dragon breathing fire over a medieval castle, fantasy landscape, dramatic clouds, cinematic lighting",
     category: "Fantasy",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=800&fit=crop&crop=center"
+    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=800&fit=crop&crop=center"
   },
   {
     id: 8,

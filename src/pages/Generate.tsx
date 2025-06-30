@@ -1,28 +1,33 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { motion } from 'framer-motion';
-import { Sparkles, Wand2, Settings, Loader2, AlertCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useImageGeneration } from '@/hooks/useImageGeneration';
+import { usePromptEnhancer } from '@/hooks/usePromptEnhancer';
+import { Sparkles, Download, Wand2, Video, Image as ImageIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 const Generate = () => {
   const [searchParams] = useSearchParams();
-  const [prompt, setPrompt] = useState('');
-  const [category, setCategory] = useState('');
-  const [style, setStyle] = useState('');
+  const [prompt, setPrompt] = useState(searchParams.get('prompt') || '');
+  const [originalPrompt, setOriginalPrompt] = useState('');
   const [quality, setQuality] = useState('standard');
   const [size, setSize] = useState('1024x1024');
+  const [category, setCategory] = useState('');
+  const [style, setStyle] = useState('');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [generationProgress, setGenerationProgress] = useState(0);
+  const [contentType, setContentType] = useState<'image' | 'video'>('image');
+  const [isPromptEnhanced, setIsPromptEnhanced] = useState(false);
 
   const { generateImage, isGenerating } = useImageGeneration();
+  const { enhancePrompt, isEnhancing } = usePromptEnhancer();
 
-  // Handle URL parameters for pre-filled prompts
   useEffect(() => {
     const urlPrompt = searchParams.get('prompt');
     if (urlPrompt) {
@@ -30,48 +35,61 @@ const Generate = () => {
     }
   }, [searchParams]);
 
-  // Simulate progress during generation
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isGenerating) {
-      setGenerationProgress(0);
-      interval = setInterval(() => {
-        setGenerationProgress(prev => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 10;
-        });
-      }, 1000);
-    } else {
-      setGenerationProgress(0);
-    }
-    return () => clearInterval(interval);
-  }, [isGenerating]);
-
   const handleGenerate = () => {
     if (!prompt.trim()) {
+      toast.error('Please enter a prompt');
       return;
     }
 
-    if (prompt.trim().length < 3) {
-      return;
-    }
-
-    setGeneratedImage(null);
-    generateImage({
-      prompt: prompt.trim(),
-      quality,
-      size,
-      category,
-      style,
-    }, {
-      onSuccess: (data) => {
-        setGeneratedImage(data.imageUrl);
-        setGenerationProgress(100);
+    generateImage(
+      {
+        prompt,
+        quality,
+        size,
+        category: category || undefined,
+        style: style || undefined,
+      },
+      {
+        onSuccess: (data) => {
+          if (data.imageUrl) {
+            setGeneratedImage(data.imageUrl);
+          }
+        },
       }
+    );
+  };
+
+  const handleEnhancePrompt = () => {
+    if (!prompt.trim()) {
+      toast.error('Please enter a prompt first');
+      return;
+    }
+
+    setOriginalPrompt(prompt);
+    enhancePrompt(prompt, {
+      onSuccess: (enhancedPrompt) => {
+        setPrompt(enhancedPrompt);
+        setIsPromptEnhanced(true);
+      },
     });
   };
 
-  const isPromptValid = prompt.trim().length >= 3;
+  const handleRevertPrompt = () => {
+    setPrompt(originalPrompt);
+    setIsPromptEnhanced(false);
+    setOriginalPrompt('');
+  };
+
+  const downloadImage = () => {
+    if (generatedImage) {
+      const link = document.createElement('a');
+      link.href = generatedImage;
+      link.download = `visiomancer-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
@@ -80,181 +98,221 @@ const Generate = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-6xl mx-auto"
         >
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Generate Image
+              Generate Your Vision
             </h1>
-            <p className="text-gray-300 text-base sm:text-lg">
-              Describe your vision and watch AI bring it to life
+            <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
+              Transform your ideas into stunning visuals with the power of AI
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {/* Generation Form */}
             <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-                  <Wand2 className="w-5 h-5 text-purple-400" />
-                  <span>Create Your Image</span>
+                <CardTitle className="flex items-center space-x-2">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                  <span>Create Something Amazing</span>
                 </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Describe what you want to see and customize the generation settings
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Prompt <span className="text-red-400">*</span>
-                  </label>
+                {/* Content Type Selection */}
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Content Type</Label>
+                  <div className="flex space-x-4">
+                    <Button
+                      variant={contentType === 'image' ? 'default' : 'outline'}
+                      onClick={() => setContentType('image')}
+                      className={`flex-1 ${contentType === 'image' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-500/30 text-purple-300 hover:bg-purple-500/10'}`}
+                    >
+                      <ImageIcon className="w-4 h-4 mr-2" />
+                      Image
+                    </Button>
+                    <Button
+                      variant={contentType === 'video' ? 'default' : 'outline'}
+                      onClick={() => setContentType('video')}
+                      className={`flex-1 ${contentType === 'video' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-500/30 text-purple-300 hover:bg-purple-500/10'}`}
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      GIF Video
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Prompt Input */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="prompt" className="text-gray-300">
+                      Describe your {contentType === 'video' ? 'animation' : 'image'}
+                    </Label>
+                    <div className="flex space-x-2">
+                      {isPromptEnhanced && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleRevertPrompt}
+                          className="border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/10"
+                        >
+                          Revert
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleEnhancePrompt}
+                        disabled={isEnhancing || !prompt.trim()}
+                        className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                      >
+                        <Wand2 className="w-4 h-4 mr-1" />
+                        {isEnhancing ? 'Enhancing...' : 'Enhance'}
+                      </Button>
+                    </div>
+                  </div>
                   <Textarea
-                    placeholder="A mystical forest with glowing mushrooms and floating crystals under a starry sky..."
+                    id="prompt"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    className="bg-slate-700/50 border-purple-500/30 text-white placeholder-gray-400 min-h-[100px] text-sm sm:text-base"
+                    placeholder={`Describe the ${contentType === 'video' ? 'animated scene' : 'image'} you want to create...`}
+                    className={`bg-slate-700/50 border-purple-500/30 text-white placeholder-gray-400 ${isPromptEnhanced ? 'border-cyan-400/50 bg-cyan-900/10' : ''}`}
+                    rows={4}
                   />
-                  {prompt.length > 0 && prompt.length < 3 && (
-                    <p className="text-red-400 text-xs mt-1">
-                      Please provide at least 3 characters for a better prompt
-                    </p>
+                  {isPromptEnhanced && (
+                    <p className="text-xs text-cyan-300">✨ Prompt has been enhanced by AI</p>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Category</label>
+                {/* Style and Category */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Category</Label>
                     <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
-                        <SelectValue placeholder="Select category" />
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                        <SelectValue placeholder="Choose category" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                        <SelectItem value="nature">Nature</SelectItem>
-                        <SelectItem value="sci-fi">Sci-Fi</SelectItem>
+                        <SelectItem value="">None</SelectItem>
                         <SelectItem value="fantasy">Fantasy</SelectItem>
+                        <SelectItem value="sci-fi">Sci-Fi</SelectItem>
+                        <SelectItem value="nature">Nature</SelectItem>
                         <SelectItem value="portrait">Portrait</SelectItem>
                         <SelectItem value="abstract">Abstract</SelectItem>
                         <SelectItem value="architecture">Architecture</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Style</label>
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Style</Label>
                     <Select value={style} onValueChange={setStyle}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
-                        <SelectValue placeholder="Select style" />
+                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                        <SelectValue placeholder="Choose style" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                        <SelectItem value="realistic">Realistic</SelectItem>
-                        <SelectItem value="artistic">Artistic</SelectItem>
-                        <SelectItem value="cartoon">Cartoon</SelectItem>
-                        <SelectItem value="anime">Anime</SelectItem>
-                        <SelectItem value="vintage">Vintage</SelectItem>
-                        <SelectItem value="modern">Modern</SelectItem>
+                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="photorealistic">Photorealistic</SelectItem>
+                        <SelectItem value="digital art">Digital Art</SelectItem>
+                        <SelectItem value="oil painting">Oil Painting</SelectItem>
+                        <SelectItem value="watercolor">Watercolor</SelectItem>
+                        <SelectItem value="cyberpunk">Cyberpunk</SelectItem>
+                        <SelectItem value="minimalist">Minimalist</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Quality</label>
-                    <Select value={quality} onValueChange={setQuality}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                        <SelectItem value="standard">Standard (3 credits)</SelectItem>
-                        <SelectItem value="hd">HD (8 credits)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Quality and Size (Only for Images) */}
+                {contentType === 'image' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Quality</Label>
+                      <Select value={quality} onValueChange={setQuality}>
+                        <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
+                          <SelectItem value="standard">Standard (3 credits)</SelectItem>
+                          <SelectItem value="hd">HD (8 credits)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Size</Label>
+                      <Select value={size} onValueChange={setSize}>
+                        <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
+                          <SelectItem value="1024x1024">Square (1024x1024)</SelectItem>
+                          <SelectItem value="1792x1024">Landscape (1792x1024)</SelectItem>
+                          <SelectItem value="1024x1792">Portrait (1024x1792)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Size</label>
-                    <Select value={size} onValueChange={setSize}>
-                      <SelectTrigger className="bg-slate-700/50 border-purple-500/30 text-white text-sm sm:text-base">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-purple-500/30 text-white">
-                        <SelectItem value="1024x1024">1024×1024 (Square)</SelectItem>
-                        <SelectItem value="1792x1024">1792×1024 (Landscape)</SelectItem>
-                        <SelectItem value="1024x1792">1024×1792 (Portrait)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {!isPromptValid && prompt.length > 0 && (
-                  <Alert className="bg-red-900/20 border-red-500/30">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-red-300">
-                      Please provide a more detailed prompt (at least 3 characters)
-                    </AlertDescription>
-                  </Alert>
                 )}
 
+                {/* Generate Button */}
                 <Button
                   onClick={handleGenerate}
-                  disabled={!isPromptValid || isGenerating}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-base sm:text-lg py-3 sm:py-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGenerating || !prompt.trim()}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-6 text-lg"
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Generating... {Math.round(generationProgress)}%
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Generating {contentType}...
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5 mr-2" />
-                      Generate Image
+                      Generate {contentType === 'video' ? 'GIF Video' : 'Image'}
                     </>
                   )}
                 </Button>
+
+                {contentType === 'video' && (
+                  <p className="text-sm text-yellow-300 text-center">
+                    ⚠️ GIF Video generation is coming soon! Currently generates static images.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
-            {/* Preview Area */}
+            {/* Generated Result */}
             <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-                  <Settings className="w-5 h-5 text-cyan-400" />
-                  <span>Preview</span>
+                <CardTitle className="flex items-center space-x-2">
+                  <ImageIcon className="w-6 h-6 text-cyan-400" />
+                  <span>Generated Result</span>
                 </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Your generated image will appear here
-                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border-2 border-dashed border-purple-500/30">
-                  {isGenerating ? (
-                    <div className="text-center text-gray-400 p-4">
-                      <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" />
-                      <p className="text-lg font-medium mb-2">Creating Magic</p>
-                      <p className="text-sm mb-2">Please wait while we generate your image...</p>
-                      <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                        <div 
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${generationProgress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500">{Math.round(generationProgress)}% complete</p>
+                {generatedImage ? (
+                  <div className="space-y-4">
+                    <div className="aspect-square bg-slate-700/30 rounded-lg overflow-hidden">
+                      <img
+                        src={generatedImage}
+                        alt="Generated"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
-                  ) : generatedImage ? (
-                    <img 
-                      src={generatedImage} 
-                      alt="Generated image" 
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                  ) : (
-                    <div className="text-center text-gray-400 p-4">
-                      <Sparkles className="w-12 h-12 mx-auto mb-4" />
-                      <p className="text-lg font-medium mb-2">Ready to Create</p>
-                      <p className="text-sm">Enter a prompt and click generate to see your image</p>
+                    <Button
+                      onClick={downloadImage}
+                      className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                    >
+                      <Download className="w-5 h-5 mr-2" />
+                      Download Image
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="aspect-square bg-slate-700/30 rounded-lg flex items-center justify-center border-2 border-dashed border-purple-500/30">
+                    <div className="text-center">
+                      <ImageIcon className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-400">Your generated {contentType} will appear here</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

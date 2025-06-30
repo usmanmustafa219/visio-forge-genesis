@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,8 +32,6 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <Navbar />
-
       <div className="container mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -244,7 +241,7 @@ const Contact = () => {
                 </CardContent>
               </Card>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     </div>
