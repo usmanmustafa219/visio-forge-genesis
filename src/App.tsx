@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
@@ -25,6 +26,7 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="App min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+            <Header />
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Index />} />

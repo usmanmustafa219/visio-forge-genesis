@@ -1,7 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, User, LogOut, Zap, Image, CreditCard, Menu, X, Home } from 'lucide-react';
+import { Eye, User, LogOut, Zap, Image, CreditCard, Menu, X, Home, Contact } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useState } from 'react';
@@ -28,7 +28,7 @@ export const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
               <Eye className="w-5 h-5 text-white" />
             </div>
@@ -44,13 +44,18 @@ export const Header = () => {
               <span>Home</span>
             </Link>
             <Link to="/samples" className="text-gray-300 hover:text-purple-300 transition-colors">
-              Samples
+              Sample Images
             </Link>
+            {user && (
+              <Link to="/gallery" className="text-gray-300 hover:text-purple-300 transition-colors">
+                My Collection
+              </Link>
+            )}
             <Link to="/about" className="text-gray-300 hover:text-purple-300 transition-colors">
               About
             </Link>
             <Link to="/contact" className="text-gray-300 hover:text-purple-300 transition-colors">
-              Contact
+              Contact Us
             </Link>
           </nav>
 
@@ -142,8 +147,17 @@ export const Header = () => {
                 className="text-gray-300 hover:text-purple-300 transition-colors px-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Samples
+                Sample Images
               </Link>
+              {user && (
+                <Link 
+                  to="/gallery" 
+                  className="text-gray-300 hover:text-purple-300 transition-colors px-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  My Collection
+                </Link>
+              )}
               <Link 
                 to="/about" 
                 className="text-gray-300 hover:text-purple-300 transition-colors px-2"
@@ -153,10 +167,11 @@ export const Header = () => {
               </Link>
               <Link 
                 to="/contact" 
-                className="text-gray-300 hover:text-purple-300 transition-colors px-2"
+                className="text-gray-300 hover:text-purple-300 transition-colors px-2 flex items-center space-x-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Contact
+                <Contact className="w-4 h-4" />
+                <span>Contact Us</span>
               </Link>
 
               {user ? (
