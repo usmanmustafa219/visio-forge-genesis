@@ -123,7 +123,7 @@ const Generate = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
             {/* Generation Form */}
             <Card className="bg-slate-800/50 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
@@ -146,12 +146,12 @@ const Generate = () => {
                       Image
                     </Button>
                     <Button
-                      variant={contentType === 'video' ? 'default' : 'outline'}
-                      onClick={() => setContentType('video')}
-                      className={`flex-1 ${contentType === 'video' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-500/30 text-purple-300 hover:bg-purple-500/10'}`}
+                      variant="outline"
+                      disabled
+                      className="flex-1 border-gray-500/30 text-gray-500 cursor-not-allowed"
                     >
                       <Video className="w-4 h-4 mr-2" />
-                      Video
+                      Video (Coming Soon)
                     </Button>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ const Generate = () => {
                 </div>
 
                 {/* Style and Category */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-gray-300">Category</Label>
                     <Select value={category} onValueChange={setCategory}>
@@ -237,7 +237,7 @@ const Generate = () => {
                 </div>
 
                 {/* Quality and Size (Size only for Images) */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-gray-300">Quality</Label>
                     <Select value={quality} onValueChange={setQuality}>

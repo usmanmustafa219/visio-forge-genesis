@@ -101,20 +101,12 @@ serve(async (req) => {
     let contentData;
 
     if (contentType === 'video') {
-      // Generate video using OpenAI's video generation endpoint
-      generationResponse = await fetch('https://api.openai.com/v1/videos/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-video-1',
-          prompt: enhancedPrompt,
-          size: '1024x1024',
-          quality: quality === 'hd' ? 'hd' : 'standard',
-          response_format: 'b64_json'
-        }),
+      // OpenAI doesn't have video generation yet, return error
+      return new Response(JSON.stringify({ 
+        error: 'Video generation is not available yet. Please use image generation instead.'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } else {
       // Generate image using DALL-E 3

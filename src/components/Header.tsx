@@ -38,29 +38,29 @@ export const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-300 hover:text-purple-300 transition-colors flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-4 xl:space-x-6">
+            <Link to="/" className="text-gray-300 hover:text-purple-300 transition-colors flex items-center space-x-1 text-sm xl:text-base">
               <Home className="w-4 h-4" />
               <span>Home</span>
             </Link>
-            <Link to="/samples" className="text-gray-300 hover:text-purple-300 transition-colors">
+            <Link to="/samples" className="text-gray-300 hover:text-purple-300 transition-colors text-sm xl:text-base">
               Sample Images
             </Link>
             {user && (
-              <Link to="/gallery" className="text-gray-300 hover:text-purple-300 transition-colors">
+              <Link to="/gallery" className="text-gray-300 hover:text-purple-300 transition-colors text-sm xl:text-base">
                 My Collection
               </Link>
             )}
-            <Link to="/about" className="text-gray-300 hover:text-purple-300 transition-colors">
+            <Link to="/about" className="text-gray-300 hover:text-purple-300 transition-colors text-sm xl:text-base">
               About
             </Link>
-            <Link to="/contact" className="text-gray-300 hover:text-purple-300 transition-colors">
+            <Link to="/contact" className="text-gray-300 hover:text-purple-300 transition-colors text-sm xl:text-base">
               Contact Us
             </Link>
           </nav>
 
           {/* Desktop User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-2 xl:space-x-4">
             {user ? (
               <>
                 {/* Credits Display */}
@@ -117,7 +117,7 @@ export const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Button
               variant="ghost"
               size="sm"
@@ -131,7 +131,7 @@ export const Header = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-purple-500/20 py-4">
+          <div className="lg:hidden border-t border-purple-500/20 py-4">
             <div className="flex flex-col space-y-4">
               {/* Navigation Links */}
               <Link 
