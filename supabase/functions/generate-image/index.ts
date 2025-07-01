@@ -2,6 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,9 +28,19 @@ serve(async (req) => {
     }
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('OpenAI_API');
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not found');
-      return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
+    const huggingFaceToken = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN');
+    
+    if (contentType === 'video' && !huggingFaceToken) {
+      console.error('Hugging Face access token not found for video generation');
+      return new Response(JSON.stringify({ error: 'Video generation service not configured. Please add Hugging Face access token.' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (contentType === 'image' && !openAIApiKey) {
+      console.error('OpenAI API key not found for image generation');
+      return new Response(JSON.stringify({ error: 'Image generation service not configured. Please add OpenAI API key.' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -101,14 +112,33 @@ serve(async (req) => {
     let contentData;
 
     if (contentType === 'video') {
-      // OpenAI doesn't have video generation API yet
-      // For now, we'll return an error with information
-      return new Response(JSON.stringify({ 
-        error: 'OpenAI does not currently support video generation. Video generation requires different AI services like Runway ML or Stability AI. Would you like me to implement video generation using an alternative service?'
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      // Generate video using Hugging Face
+      console.log('Generating video with Hugging Face...');
+      
+      try {
+        const hf = new HfInference(huggingFaceToken);
+        
+        // Use a free video generation model from Hugging Face
+        const videoResponse = await hf.textToVideo({
+          inputs: enhancedPrompt,
+          model: 'ali-vilab/text-to-video-ms-1.7b',
+        });
+
+        // Convert response to base64
+        const arrayBuffer = await videoResponse.arrayBuffer();
+        contentData = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        contentUrl = `data:video/mp4;base64,${contentData}`;
+        
+        console.log('Video generated successfully with Hugging Face');
+      } catch (hfError) {
+        console.error('Hugging Face video generation error:', hfError);
+        return new Response(JSON.stringify({ 
+          error: `Video generation failed: ${hfError.message || 'Unknown error'}`
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     } else {
       // Generate image using DALL-E 3
       generationResponse = await fetch('https://api.openai.com/v1/images/generations', {
@@ -128,51 +158,49 @@ serve(async (req) => {
       });
     }
 
-    console.log('OpenAI API response status:', generationResponse.status);
+    // Only process OpenAI response for images (video is already processed above)
+    if (contentType === 'image') {
+      console.log('OpenAI API response status:', generationResponse.status);
 
-    if (!generationResponse.ok) {
-      const errorText = await generationResponse.text();
-      console.error('OpenAI API error:', generationResponse.status, errorText);
-      
-      let errorMessage = `Failed to generate ${contentType}`;
-      try {
-        const errorData = JSON.parse(errorText);
-        if (errorData.error?.message) {
-          errorMessage = errorData.error.message;
-          if (errorMessage.includes('content policy')) {
-            errorMessage = 'Content policy violation. Please modify your prompt and try again.';
-          } else if (errorMessage.includes('rate limit')) {
-            errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+      if (!generationResponse.ok) {
+        const errorText = await generationResponse.text();
+        console.error('OpenAI API error:', generationResponse.status, errorText);
+        
+        let errorMessage = `Failed to generate ${contentType}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+            if (errorMessage.includes('content policy')) {
+              errorMessage = 'Content policy violation. Please modify your prompt and try again.';
+            } else if (errorMessage.includes('rate limit')) {
+              errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+            }
           }
+        } catch (e) {
+          console.error('Error parsing OpenAI error response:', e);
         }
-      } catch (e) {
-        console.error('Error parsing OpenAI error response:', e);
+        
+        return new Response(JSON.stringify({ 
+          error: errorMessage
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
+
+      const responseData = await generationResponse.json();
+      console.log('OpenAI response received, processing...');
       
-      return new Response(JSON.stringify({ 
-        error: errorMessage
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+      if (!responseData.data || !responseData.data[0] || !responseData.data[0].b64_json) {
+        console.error('Invalid response from OpenAI:', responseData);
+        return new Response(JSON.stringify({ error: `Invalid response from ${contentType} generation service` }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-    const responseData = await generationResponse.json();
-    console.log('OpenAI response received, processing...');
-    
-    if (!responseData.data || !responseData.data[0] || !responseData.data[0].b64_json) {
-      console.error('Invalid response from OpenAI:', responseData);
-      return new Response(JSON.stringify({ error: `Invalid response from ${contentType} generation service` }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    contentData = responseData.data[0].b64_json;
-    
-    if (contentType === 'video') {
-      contentUrl = `data:video/mp4;base64,${contentData}`;
-    } else {
+      contentData = responseData.data[0].b64_json;
       contentUrl = `data:image/png;base64,${contentData}`;
     }
     

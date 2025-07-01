@@ -155,8 +155,8 @@ const Generate = () => {
     </Button>
   </div>
   {contentType === 'video' && (
-    <p className="text-sm text-yellow-400 bg-yellow-400/10 p-2 rounded border border-yellow-400/30">
-      ⚠️ Note: OpenAI doesn't support video generation yet. This will show an informative error.
+    <p className="text-sm text-cyan-400 bg-cyan-400/10 p-2 rounded border border-cyan-400/30">
+      ✨ Video generation powered by Hugging Face (Free)
     </p>
   )}
 </div>
