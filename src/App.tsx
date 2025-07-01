@@ -20,6 +20,13 @@ import './App.css';
 
 const queryClient = new QueryClient();
 
+// This is the main application component that sets up the routing and context providers.
+// It includes the header, footer, and main content area where different pages are rendered based on
+// the current route. The application uses React Router for navigation and TanStack Query for data fetching.
+// The AuthProvider wraps the application to provide authentication context, and ProtectedRoute
+// is used to protect certain routes that require authentication. The Toaster component is used for displaying notifications.
+// The application is styled with Tailwind CSS and has a gradient background.
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
