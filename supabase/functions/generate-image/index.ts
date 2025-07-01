@@ -101,9 +101,10 @@ serve(async (req) => {
     let contentData;
 
     if (contentType === 'video') {
-      // OpenAI doesn't have video generation yet, return error
+      // OpenAI doesn't have video generation API yet
+      // For now, we'll return an error with information
       return new Response(JSON.stringify({ 
-        error: 'Video generation is not available yet. Please use image generation instead.'
+        error: 'OpenAI does not currently support video generation. Video generation requires different AI services like Runway ML or Stability AI. Would you like me to implement video generation using an alternative service?'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -134,27 +134,32 @@ const Generate = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Content Type Selection */}
-                <div className="space-y-2">
-                  <Label className="text-gray-300">Content Type</Label>
-                  <div className="flex space-x-4">
-                    <Button
-                      variant={contentType === 'image' ? 'default' : 'outline'}
-                      onClick={() => setContentType('image')}
-                      className={`flex-1 ${contentType === 'image' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-500/30 text-purple-300 hover:bg-purple-500/10'}`}
-                    >
-                      <ImageIcon className="w-4 h-4 mr-2" />
-                      Image
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled
-                      className="flex-1 border-gray-500/30 text-gray-500 cursor-not-allowed"
-                    >
-                      <Video className="w-4 h-4 mr-2" />
-                      Video (Coming Soon)
-                    </Button>
-                  </div>
-                </div>
+<div className="space-y-2">
+  <Label className="text-gray-300">Content Type</Label>
+  <div className="flex space-x-4">
+    <Button
+      variant={contentType === 'image' ? 'default' : 'outline'}
+      onClick={() => setContentType('image')}
+      className={`flex-1 ${contentType === 'image' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-500/30 text-purple-300 hover:bg-purple-500/10'}`}
+    >
+      <ImageIcon className="w-4 h-4 mr-2" />
+      Image
+    </Button>
+    <Button
+      variant={contentType === 'video' ? 'default' : 'outline'}
+      onClick={() => setContentType('video')}
+      className={`flex-1 ${contentType === 'video' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-500/30 text-purple-300 hover:bg-purple-500/10'}`}
+    >
+      <Video className="w-4 h-4 mr-2" />
+      Video
+    </Button>
+  </div>
+  {contentType === 'video' && (
+    <p className="text-sm text-yellow-400 bg-yellow-400/10 p-2 rounded border border-yellow-400/30">
+      ⚠️ Note: OpenAI doesn't support video generation yet. This will show an informative error.
+    </p>
+  )}
+</div>
 
                 {/* Prompt Input */}
                 <div className="space-y-2">
